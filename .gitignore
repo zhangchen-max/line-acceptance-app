@@ -1,0 +1,21 @@
+# 第三方前端库（非本项目原创代码），运行时由 npm 安装或从官方 CDN 引入
+static/vendor/
+
+# 二进制示例图片（非源码，仅用于本地演示）
+sample_data/images/
+sample_data/upload_tests/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+data/*.db
+storage/models/
+storage/projects/
+storage/evidence/
+storage/reports/
+storage/*.log
+storage/*.jpg
+
+!storage/.gitkeep

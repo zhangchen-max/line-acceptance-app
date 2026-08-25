@@ -1,0 +1,60 @@
+{
+  "registration": {
+    "max_residual": 0.15
+  },
+  "vision": {
+    "confidence_threshold": 0.6
+  },
+  "geometry_rules": [
+    {
+      "item": "foundation_span",
+      "label": "基础根开偏差",
+      "unit": "m",
+      "threshold": 0.08,
+      "review_ratio": 1.0,
+      "serious_ratio": 1.2,
+      "default_design": 8.0,
+      "default_measured": 8.04
+    },
+    {
+      "item": "tower_inclination",
+      "label": "杆塔倾斜度",
+      "unit": "deg",
+      "threshold": 0.25,
+      "review_ratio": 1.0,
+      "serious_ratio": 1.2,
+      "default_design": 0.0,
+      "default_measured": 0.22
+    },
+    {
+      "item": "conductor_sag",
+      "label": "导线弧垂",
+      "unit": "m",
+      "threshold": 0.35,
+      "review_ratio": 1.0,
+      "serious_ratio": 1.2,
+      "default_design": 9.8,
+      "default_measured": 10.21
+    },
+    {
+      "item": "crossing_clearance",
+      "label": "交叉跨越净空",
+      "unit": "m",
+      "threshold": 0.3,
+      "review_ratio": 1.0,
+      "serious_ratio": 1.2,
+      "default_design": 8.0,
+      "default_measured": 7.58
+    },
+    {
+      "item": "channel_distance",
+      "label": "通道物距",
+      "unit": "m",
+      "threshold": 0.5,
+      "review_ratio": 1.0,
+      "serious_ratio": 1.2,
+      "default_design": 3.0,
+      "default_measured": 2.41
+    }
+  ]
+}

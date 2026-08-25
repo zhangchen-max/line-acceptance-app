@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>基于人工智能的线路工程验收校核软件</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><i data-lucide="scan-line"></i></div>
+      <div>
+        <div class="brand-name">线路智能验收</div>
+        <div class="brand-sub">工程校核工作台 V1.0</div>
+      </div>
+    </div>
+
+    <nav class="nav-groups" aria-label="主导航">
+      <div class="nav-group">
+        <div class="nav-label">项目</div>
+        <button class="nav-button active" data-view="task-center" aria-label="任务中心" title="任务中心"><i data-lucide="folder-kanban"></i><span>任务中心</span></button>
+        <button class="nav-button" data-view="assets" aria-label="数据资料" title="数据资料"><i data-lucide="database"></i><span>数据资料</span></button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">智能校核</div>
+        <button class="nav-button" data-view="fusion" aria-label="融合总览" title="融合总览"><i data-lucide="layers-3"></i><span>融合总览</span></button>
+        <button class="nav-button" data-view="pointcloud" aria-label="点云处理" title="点云处理"><i data-lucide="scan"></i><span>点云处理</span></button>
+        <button class="nav-button" data-view="compare" aria-label="模型点云对比" title="模型点云对比"><i data-lucide="git-compare-arrows"></i><span>模型点云对比</span></button>
+        <button class="nav-button" data-view="vision" aria-label="影像验收" title="影像验收"><i data-lucide="scan-search"></i><span>影像验收</span></button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">验收闭环</div>
+        <button class="nav-button" data-view="issues" aria-label="问题台账" title="问题台账"><i data-lucide="clipboard-check"></i><span>问题台账</span><span id="pending-badge" class="nav-badge">0</span></button>
+        <button class="nav-button" data-view="rules" aria-label="规则库" title="规则库"><i data-lucide="sliders-horizontal"></i><span>规则库</span></button>
+        <button class="nav-button" data-view="reports" aria-label="报告归档" title="报告归档"><i data-lucide="archive"></i><span>报告归档</span></button>
+      </div>
+    </nav>
+
+    <div id="sidebar-model" class="sidebar-status">
+      <span class="status-dot"></span>
+      <div><strong>AI模型检查中</strong><small>Grounding DINO Tiny</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="page-heading">
+        <div class="breadcrumb"><span>线路工程验收</span><i data-lucide="chevron-right"></i><span id="page-context">任务中心</span></div>
+        <div class="title-row">
+          <h1 id="page-title">任务中心</h1>
+          <span id="task-status" class="tag neutral">未选择任务</span>
+        </div>
+      </div>
+      <div class="topbar-controls">
+        <label class="task-picker">
+          <span>当前任务</span>
+          <select id="task-select" aria-label="当前验收任务"></select>
+        </label>
+        <button id="new-task" class="secondary-button" aria-label="新建任务" title="新建任务"><i data-lucide="plus"></i><span>新建任务</span></button>
+        <button id="export-report" aria-label="导出验收报告" title="导出验收报告"><i data-lucide="file-down"></i><span>导出报告</span></button>
+        <button id="load-demo" class="icon-button ghost-button" title="加载示例数据" aria-label="加载示例数据"><i data-lucide="database-backup"></i></button>
+      </div>
+    </header>
+
+    <section id="task-center" class="view active">
+      <div class="section-toolbar">
+        <div>
+          <h2>验收任务</h2>
+          <p id="task-summary-text" class="muted">正在读取任务数据</p>
+        </div>
+        <div class="toolbar-actions">
+          <button id="task-create-primary"><i data-lucide="plus"></i><span>创建验收任务</span></button>
+        </div>
+      </div>
+      <div id="task-table" class="table-wrap"></div>
+      <div class="overview-band">
+        <div class="overview-item"><span id="task-count">0</span><label>任务总数</label></div>
+        <div class="overview-item"><span id="measurement-count">0</span><label>点云量测</label></div>
+        <div class="overview-item"><span id="geometry-count">0</span><label>偏差校核</label></div>
+        <div class="overview-item"><span id="vision-count">0</span><label>影像缺陷</label></div>
+        <div class="overview-item"><span id="report-count">0</span><label>归档报告</label></div>
+      </div>
+    </section>
+
+    <section id="assets" class="view">
+      <div class="asset-layout">
+        <section class="tool-panel">
+          <div class="panel-header">
+            <div class="panel-icon blue"><i data-lucide="box"></i></div>
+            <div><h2>设计模型</h2><p>GIM-like JSON</p></div>
+            <span id="model-asset-count" class="count-chip">0</span>
+          </div>
+          <div class="form-grid compact-form">
+            <label><span>模型版本</span><input id="model-version" type="text" value="V1.0"></label>
+            <label class="file-field"><span>模型文件</span><input id="model-file" type="file" accept="application/json,.json"></label>
+          </div>
+          <button id="upload-model"><i data-lucide="upload"></i><span>导入并解析</span></button>
+          <div id="model-asset-table" class="table-wrap embedded"></div>
+        </section>
+
+        <section class="tool-panel">
+          <div class="panel-header">
+            <div class="panel-icon teal"><i data-lucide="scan"></i></div>
+            <div><h2>点云资料</h2><p>CSV x,y,z,class,intensity</p></div>
+            <span id="pointcloud-asset-count" class="count-chip">0</span>
+          </div>
+          <div class="form-grid compact-form">
+            <label><span>坐标系统</span><input id="coordinate-system" type="text" value="CGCS2000"></label>
+            <label class="file-field"><span>点云文件</span><input id="pointcloud-file" type="file" accept="text/csv,.csv"></label>
+          </div>
+          <button id="upload-pointcloud"><i data-lucide="upload"></i><span>导入点云</span></button>
+          <div id="pointcloud-asset-table" class="table-wrap embedded"></div>
+        </section>
+
+        <section class="tool-panel wide-panel">
+          <div class="panel-header">
+            <div class="panel-icon amber"><i data-lucide="images"></i></div>
+            <div><h2>现场影像</h2><p>PNG、JPG、WebP</p></div>
+            <span id="image-asset-count" class="count-chip">0</span>
+          </div>
+          <div id="image-asset-table" class="table-wrap embedded"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="fusion" class="view">
+      <div class="metrics">
+        <div class="metric"><i data-lucide="box"></i><div><span id="fusion-model-count">0</span><label>设计构件</label></div></div>
+        <div class="metric"><i data-lucide="scan"></i><div><span id="fusion-slice-count">0</span><label>点云分片</label></div></div>
+        <div class="metric"><i data-lucide="ruler"></i><div><span id="fusion-check-count">0</span><label>校核结果</label></div></div>
+        <div class="metric"><i data-lucide="triangle-alert"></i><div><span id="fusion-issue-count">0</span><label>验收问题</label></div></div>
+      </div>
+      <div class="fusion-console">
+        <div class="fusion-commandbar">
+          <div class="scene-heading">
+            <strong>多源验收融合场景</strong>
+            <span id="fusion-data-note">等待任务数据</span>
+          </div>
+          <div class="scene-mode-switch" role="tablist" aria-label="场景视图">
+            <button class="active" data-scene-mode="profile" role="tab" aria-selected="true"><i data-lucide="chart-spline"></i><span>工程纵断面</span></button>
+            <button data-scene-mode="three" role="tab" aria-selected="false"><i data-lucide="box"></i><span>三维巡视</span></button>
+          </div>
+          <div class="scene-camera-tools" aria-label="场景视角">
+            <button class="icon-button" data-scene-camera="fit" title="适应场景"><i data-lucide="maximize"></i></button>
+            <button class="icon-button three-only" data-scene-camera="top" title="俯视"><i data-lucide="move-down"></i></button>
+            <button class="icon-button three-only" data-scene-camera="side" title="侧视"><i data-lucide="panel-left"></i></button>
+            <button class="icon-button three-only" data-scene-camera="reset" title="复位视角"><i data-lucide="rotate-ccw"></i></button>
+          </div>
+        </div>
+        <div id="scene-warning-bar" class="scene-warning-bar" hidden></div>
+        <div class="fusion-workspace">
+          <div class="fusion-viewport">
+            <div id="profile-scene" class="fusion-scene-view active" aria-label="线路工程纵断面">
+              <canvas id="fusion-pointcloud-canvas" width="1200" height="640"></canvas>
+              <svg id="fusion-profile-svg" viewBox="0 0 1200 640" role="img" aria-label="设计模型与实测点云纵断面"></svg>
+            </div>
+            <div id="three-scene" class="fusion-scene-view" aria-label="线路三维巡视场景">
+              <div id="fusion-three-container"></div>
+              <div id="three-scene-badge">参数化空间表达</div>
+              <div id="webgl-fallback" class="scene-empty" hidden><i data-lucide="monitor-x"></i><strong>三维视图不可用</strong><span>当前设备不支持 WebGL，请使用工程纵断面继续验收。</span></div>
+            </div>
+            <div id="fusion-scene-empty" class="scene-empty" hidden>
+              <i data-lucide="layers-3"></i>
+              <strong>尚未形成融合场景</strong>
+              <span>请先导入设计模型或点云资料。</span>
+            </div>
+            <div class="scene-statusbar">
+              <span id="scene-coordinate">坐标系：未提供</span>
+              <span id="scene-point-summary">场景点：0</span>
+              <span id="scene-selection-summary">未选择验收对象</span>
+            </div>
+          </div>
+          <aside class="fusion-inspector">
+            <div class="inspector-tabs" role="tablist" aria-label="融合场景信息">
+              <button class="active" data-inspector-tab="issues" role="tab" aria-selected="true">问题 <span id="inspector-issue-count">0</span></button>
+              <button data-inspector-tab="layers" role="tab" aria-selected="false">图层</button>
+              <button data-inspector-tab="detail" role="tab" aria-selected="false">对象详情</button>
+            </div>
+            <div class="inspector-body">
+              <section class="inspector-panel active" data-inspector-panel="issues">
+                <div class="inspector-section-title"><span>验收问题</span><small>按风险等级排序</small></div>
+                <div id="fusion-issue-list" class="fusion-issue-list"></div>
+                <div id="unlocated-evidence" class="unlocated-evidence"></div>
+              </section>
+              <section class="inspector-panel" data-inspector-panel="layers">
+                <div class="inspector-section-title"><span>数据图层</span><small>纵断面与三维同步</small></div>
+                <div class="fusion-layer-list">
+                  <label><span class="layer-symbol design-line"></span><span>设计模型</span><input type="checkbox" data-layer="model" checked></label>
+                  <label><span class="layer-symbol measured-line"></span><span>实测导线</span><input type="checkbox" data-layer="measured" checked></label>
+                  <label><span class="layer-symbol point-symbol"></span><span>语义点云</span><input type="checkbox" data-layer="pointcloud" checked></label>
+                  <label><span class="layer-symbol object-symbol"></span><span>交跨与通道</span><input type="checkbox" data-layer="objects" checked></label>
+                  <label><span class="layer-symbol issue-symbol"></span><span>验收问题</span><input type="checkbox" data-layer="issues" checked></label>
+                  <label><span class="layer-symbol image-symbol"></span><span>影像位置</span><input type="checkbox" data-layer="images" checked></label>
+                </div>
+                <div class="inspector-section-title second"><span>状态图例</span></div>
+                <div id="scene-legend" class="legend"></div>
+                <div class="inspector-section-title second"><span>任务信息</span></div>
+                <div id="task-detail" class="detail-list"></div>
+              </section>
+              <section class="inspector-panel" data-inspector-panel="detail">
+                <div id="fusion-selection-detail" class="fusion-selection-detail"></div>
+              </section>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="pointcloud" class="view">
+      <div class="section-toolbar">
+        <div><h2>点云智能处理</h2><p class="muted">分片、分类、对象提取与工程量测</p></div>
+        <button id="process-pointcloud"><i data-lucide="play"></i><span>执行点云处理</span></button>
+      </div>
+      <div class="split-panels">
+        <section><h3>识别对象</h3><div id="object-table" class="table-wrap"></div></section>
+        <section><h3>量测结果</h3><div id="measurement-table" class="table-wrap"></div></section>
+      </div>
+      <h3>空间分片</h3><div id="slice-table" class="table-wrap"></div>
+    </section>
+
+    <section id="compare" class="view">
+      <div class="section-toolbar">
+        <div><h2>模型点云偏差校核</h2><p class="muted">设计值与点云实测结果对比</p></div>
+        <div class="toolbar-actions">
+          <button id="run-registration" class="secondary-button"><i data-lucide="crosshair"></i><span>执行配准</span></button>
+          <button id="run-compare"><i data-lucide="git-compare-arrows"></i><span>执行校核</span></button>
+        </div>
+      </div>
+      <div id="check-table" class="table-wrap"></div>
+      <h3>偏差热力标记</h3><div id="heatmap-table" class="table-wrap"></div>
+    </section>
+
+    <section id="vision" class="view">
+      <div class="vision-commandbar">
+        <div id="model-status-panel" class="model-status"><span class="status-dot"></span><div><strong>检查AI模型</strong><small>请稍候</small></div></div>
+        <div class="vision-upload">
+          <input id="photo-file" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+          <input id="shoot-position" type="text" value="T001 杆塔小号侧" aria-label="拍摄位置">
+          <button id="upload-photo"><i data-lucide="upload"></i><span>上传并验收</span></button>
+          <button id="run-vision" class="secondary-button"><i data-lucide="scan-search"></i><span>重新诊断</span></button>
+        </div>
+      </div>
+
+      <div class="vision-workspace">
+        <section class="media-workbench">
+          <div class="media-toolbar">
+            <div><strong id="media-title">尚未选择影像</strong><span id="media-meta"></span></div>
+            <div class="media-actions">
+              <button id="show-original" class="segmented active">原图</button>
+              <button id="show-evidence" class="segmented">证据图</button>
+              <a id="open-media" class="icon-link disabled" target="_blank" title="打开原图"><i data-lucide="external-link"></i></a>
+            </div>
+          </div>
+          <div class="image-stage"><div id="image-empty" class="empty-state"><i data-lucide="image"></i><span>选择或上传现场照片</span></div><img id="vision-image" alt="现场验收影像"></div>
+          <div id="image-strip" class="image-strip"></div>
+        </section>
+
+        <aside class="diagnosis-panel">
+          <div class="diagnosis-heading"><span>验收诊断</span><span id="diagnosis-run-status" class="tag neutral">未运行</span></div>
+          <div id="acceptance-panel" class="acceptance-panel neutral"></div>
+          <div class="diagnosis-section"><h3>AI运行</h3><div id="run-detail" class="detail-list"></div></div>
+          <div class="diagnosis-section"><h3>影像质量</h3><div id="quality-detail" class="quality-grid"></div></div>
+          <div class="diagnosis-section"><h3>缺陷候选</h3><div id="candidate-list" class="candidate-list"></div></div>
+        </aside>
+      </div>
+      <h3>诊断明细</h3><div id="vision-table" class="table-wrap"></div>
+    </section>
+
+    <section id="issues" class="view">
+      <div class="section-toolbar">
+        <div><h2>问题台账</h2><p class="muted">AI初判、几何超限、人工复核与整改闭环</p></div>
+      </div>
+      <div id="issue-table" class="table-wrap"></div>
+    </section>
+
+    <section id="rules" class="view">
+      <div class="section-toolbar">
+        <div><h2>验收规则库</h2><p class="muted">当前规则版本将随诊断结果留痕</p></div>
+        <button id="reset-rules" class="secondary-button"><i data-lucide="rotate-ccw"></i><span>恢复示例规则</span></button>
+      </div>
+      <div class="notice-bar"><i data-lucide="info"></i><span>当前为项目示例阈值，正式验收前应依据适用标准表完成复核。</span></div>
+      <div id="rule-table" class="table-wrap"></div>
+    </section>
+
+    <section id="reports" class="view">
+      <div class="section-toolbar">
+        <div><h2>报告归档</h2><p class="muted">验收过程、诊断证据与复核结论</p></div>
+        <button id="export-report-secondary"><i data-lucide="file-down"></i><span>生成验收报告</span></button>
+      </div>
+      <div id="report-table" class="table-wrap"></div>
+    </section>
+  </main>
+
+  <dialog id="task-dialog">
+    <form id="task-form" method="dialog">
+      <div class="dialog-header"><h2>创建验收任务</h2><button type="button" class="icon-button ghost-button close-dialog" title="关闭"><i data-lucide="x"></i></button></div>
+      <div class="form-grid">
+        <label class="span-two"><span>工程名称</span><input name="project_name" required value="线路工程竣工验收项目"></label>
+        <label><span>线路名称</span><input name="line_name" required value="220kV 示范线路"></label>
+        <label><span>验收标段</span><input name="section_name" required value="一标段"></label>
+        <label><span>验收批次</span><input name="batch_no" required value="YS-2026-08"></label>
+        <label><span>负责人</span><input name="owner" required value="验收工程师"></label>
+        <label class="span-two"><span>施工单位</span><input name="construction_unit" value="施工单位"></label>
+      </div>
+      <div class="dialog-actions"><button type="button" class="secondary-button close-dialog">取消</button><button type="submit">创建任务</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="rule-dialog">
+    <form id="rule-form" method="dialog">
+      <div class="dialog-header"><h2 id="rule-dialog-title">编辑验收规则</h2><button type="button" class="icon-button ghost-button close-dialog" title="关闭"><i data-lucide="x"></i></button></div>
+      <input id="rule-id" type="hidden">
+      <div id="rule-fields" class="form-grid"></div>
+      <div class="dialog-actions"><button type="button" class="secondary-button close-dialog">取消</button><button type="submit">保存规则</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="review-dialog">
+    <form id="review-form" method="dialog">
+      <div class="dialog-header"><h2>人工复核</h2><button type="button" class="icon-button ghost-button close-dialog" title="关闭"><i data-lucide="x"></i></button></div>
+      <input id="review-issue-id" type="hidden">
+      <div class="form-grid">
+        <label><span>复核动作</span><select id="review-action"><option>确认</option><option>修改后确认</option><option>驳回</option></select></label>
+        <label><span>复核人员</span><input id="reviewer" value="复核人员"></label>
+        <label class="span-two"><span>复核意见</span><textarea id="review-opinion" rows="4" required></textarea></label>
+      </div>
+      <div class="dialog-actions"><button type="button" class="secondary-button close-dialog">取消</button><button type="submit">提交复核</button></div>
+    </form>
+  </dialog>
+
+  <div id="loading" class="loading-overlay" aria-hidden="true"><div class="spinner"></div><span>正在处理</span></div>
+  <div id="toast" role="status"></div>
+  <script src="/static/vendor/lucide.min.js"></script>
+  <script type="module" src="/static/fusion3d.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

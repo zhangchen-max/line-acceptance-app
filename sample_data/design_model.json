@@ -1,0 +1,89 @@
+{
+  "model_type": "GIM-like JSON",
+  "model_version": "GIM-2026.07",
+  "coordinate_system": "CGCS2000",
+  "components": [
+    {
+      "component_code": "T001",
+      "component_type": "杆塔",
+      "design_value": 0.0,
+      "unit": "deg",
+      "bbox": [
+        -4.2,
+        -4.2,
+        4.2,
+        4.2
+      ],
+      "properties": {
+        "check_item": "tower_inclination",
+        "tower_height": 36.5,
+        "axis": "Z"
+      }
+    },
+    {
+      "component_code": "F001",
+      "component_type": "基础",
+      "design_value": 8.0,
+      "unit": "m",
+      "bbox": [
+        -4.0,
+        -4.0,
+        4.0,
+        4.0
+      ],
+      "properties": {
+        "check_item": "foundation_span",
+        "foundation_type": "四腿基础"
+      }
+    },
+    {
+      "component_code": "L001",
+      "component_type": "导线",
+      "design_value": 9.8,
+      "unit": "m",
+      "bbox": [
+        0.0,
+        -2.0,
+        410.0,
+        2.0
+      ],
+      "properties": {
+        "check_item": "conductor_sag",
+        "span": 410,
+        "phase": "A/B/C"
+      }
+    },
+    {
+      "component_code": "X001",
+      "component_type": "交跨对象",
+      "design_value": 8.0,
+      "unit": "m",
+      "bbox": [
+        132.0,
+        -10.0,
+        158.0,
+        8.0
+      ],
+      "properties": {
+        "check_item": "crossing_clearance",
+        "object": "道路"
+      }
+    },
+    {
+      "component_code": "CH001",
+      "component_type": "通道",
+      "design_value": 3.0,
+      "unit": "m",
+      "bbox": [
+        178.0,
+        10.0,
+        230.0,
+        24.0
+      ],
+      "properties": {
+        "check_item": "channel_distance",
+        "object": "树障"
+      }
+    }
+  ]
+}
